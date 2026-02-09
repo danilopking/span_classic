@@ -17,6 +17,7 @@ const boxes = {
   support: document.getElementById("box-support"),
 };
 
+const statusEl = document.getElementById("status");
 const statusText = document.getElementById("statusText");
 
 function val(key){ return parseInt(sliders[key].value, 10); }
@@ -37,9 +38,8 @@ function svgEl(tag, attrs, parent){
 }
 
 /**
- * Get center point of a slider thumb relative to spans container.
- * We use the input element box + value percent.
- * This is stable enough for demo purposes across browsers.
+ * Point for overlay line: approximate thumb center relative to spans container.
+ * Stable enough for demo video. (If you want pixel-perfect, we can build custom sliders.)
  */
 function sliderPoint(key){
   const input = sliders[key];
@@ -51,13 +51,19 @@ function sliderPoint(key){
   const v = val(key);
   const t = (v - min) / (max - min);
 
-  // Track runs full width of input element; thumb center approximated by t * width
   const x = (rect.left - host.left) + t * rect.width;
-
-  // y = vertically center of the input element (track)
   const y = (rect.top - host.top) + rect.height / 2;
 
   return { x, y };
+}
+
+// helper: range value -> x in a container width (used for gap arrow)
+function xFromRange(input, width){
+  const min = parseInt(input.min,10);
+  const max = parseInt(input.max,10);
+  const v = parseInt(input.value,10);
+  const t = (v - min) / (max - min);
+  return t * width;
 }
 
 function renderOverlayLine(){
@@ -72,15 +78,12 @@ function renderOverlayLine(){
   const p3 = sliderPoint("influence");
   const p4 = sliderPoint("support");
 
-  const points = [p1,p2,p3,p4];
-
-  // Dotted polyline
   svgEl("polyline", {
-    points: points.map(p => `${p.x},${p.y}`).join(" "),
+    points: [p1,p2,p3,p4].map(p => `${p.x},${p.y}`).join(" "),
     fill: "none",
-    stroke: "rgba(17,24,39,.85)",
-    "stroke-width": 3,
-    "stroke-dasharray": "3 5",
+    stroke: "rgba(17,24,39,.75)",
+    "stroke-width": 2,
+    "stroke-dasharray": "2 5",
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
   }, overlaySvg);
@@ -94,73 +97,72 @@ function renderGapArrow(){
   gapSvg.setAttribute("preserveAspectRatio", "none");
   clear(gapSvg);
 
-  // In the screenshot, arrow is aligned with the slider track area (not full width).
-  // We'll compute left/right using the same sliderPoint() but projected into gapSvg width.
-  const host = spansEl.getBoundingClientRect();
-  const gapHost = gapSvg.getBoundingClientRect();
-
-  // points in spans coords
-  const c = sliderPoint("control");
-  const a = sliderPoint("accountability");
-
-  // Map spans x to gapSvg x
-  // gapSvg sits under the tracks column, so use its bounding box mapping.
-  const xC = ((c.x + host.left) - gapHost.left) ; // approximate px in gapSvg space
-  const xA = ((a.x + host.left) - gapHost.left) ;
+  // Robust and straight: use % position on the scale, not DOM px mapping.
+  const xC = xFromRange(sliders.control, w);
+  const xA = xFromRange(sliders.accountability, w);
 
   const left = Math.min(xC, xA);
   const right = Math.max(xC, xA);
-  const midY = h * 0.58;
 
-  // Arrowhead marker
-  const defs = svgEl("defs", {}, gapSvg);
-  const marker = svgEl("marker", {
-    id: "arrowHead",
-    markerWidth: 12,
-    markerHeight: 12,
-    refX: 10,
-    refY: 6,
-    orient: "auto"
-  }, defs);
+  const y = h * 0.50;
 
-  svgEl("path", { d: "M0,0 L12,6 L0,12 Z", fill: "rgba(127,29,29,.95)" }, marker);
+  const stroke = "rgba(15,23,42,.45)";
+  const fill = "rgba(15,23,42,.45)";
 
-  // Line + arrow
+  const head = 14;
+  const half = 7;
+
+  // main line
   svgEl("line", {
-    x1: left,
-    y1: midY,
-    x2: right,
-    y2: midY,
-    stroke: "rgba(127,29,29,.95)",
-    "stroke-width": 6,
-    "marker-end": "url(#arrowHead)"
+    x1: left + head,
+    y1: y,
+    x2: right - head,
+    y2: y,
+    stroke,
+    "stroke-width": 3,
+    "stroke-linecap": "round",
   }, gapSvg);
 
-  // Left “tail” triangle like screenshot (optional, but nice)
+  // left head
   svgEl("path", {
-    d: `M ${left} ${midY} L ${left + 18} ${midY - 10} L ${left + 18} ${midY + 10} Z`,
-    fill: "rgba(127,29,29,.95)"
+    d: `M ${left + head} ${y - half} L ${left} ${y} L ${left + head} ${y + half} Z`,
+    fill
   }, gapSvg);
 
+  // right head
+  svgEl("path", {
+    d: `M ${right - head} ${y - half} L ${right} ${y} L ${right - head} ${y + half} Z`,
+    fill
+  }, gapSvg);
+
+  // label
   svgEl("text", {
     x: (left + right) / 2,
-    y: midY + 26,
-    fill: "rgba(127,29,29,.95)",
-    "font-size": 20,
+    y: y + 26,
+    fill: "rgba(15,23,42,.55)",
+    "font-size": 18,
     "text-anchor": "middle",
     "font-family": "ui-sans-serif, system-ui"
   }, gapSvg).textContent = "Entrepreneurial Gap";
 }
 
 function renderStatus(){
-  // Minimal “balanced” heuristic for demo.
   const demand = val("accountability") + val("influence");
   const supply = val("control") + val("support");
   const delta = supply - demand;
 
-  if (delta >= -1 && delta <= 1) statusText.textContent = "This job is balanced.";
-  else if (delta < -1) statusText.textContent = "This job is overloaded.";
-  else statusText.textContent = "This job has excess capacity.";
+  statusEl.classList.remove("ok","warn","bad");
+
+  if (delta >= -1 && delta <= 1) {
+    statusText.textContent = "This job is balanced.";
+    statusEl.classList.add("ok");
+  } else if (delta < -1) {
+    statusText.textContent = "This job is overloaded.";
+    statusEl.classList.add("bad");
+  } else {
+    statusText.textContent = "This job has excess capacity.";
+    statusEl.classList.add("warn");
+  }
 }
 
 function render(){
@@ -171,8 +173,6 @@ function render(){
 }
 
 Object.values(sliders).forEach(inp => inp.addEventListener("input", render));
-
-// Re-render on resize (important for “not crooked”)
 new ResizeObserver(() => render()).observe(panel);
 
 render();
