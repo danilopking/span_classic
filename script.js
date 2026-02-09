@@ -1,8 +1,8 @@
 const spans = [
-  { key: "Control", label: "Span of Control" },
-  { key: "Accountability", label: "Span of Accountability" },
-  { key: "Influence", label: "Span of Influence" },
-  { key: "Support", label: "Span of Support" },
+  { key: "Control", label: "Span of Control", left: "Few", right: "Many" },
+  { key: "Accountability", label: "Span of Accountability", left: "Few trade-offs", right: "Many trade-offs" },
+  { key: "Influence", label: "Span of Influence", left: "Within unit", right: "Across units" },
+  { key: "Support", label: "Span of Support", left: "No help", right: "Willing to help" },
 ];
 
 const el = (id) => document.getElementById(id);
@@ -22,24 +22,19 @@ const valueEls = {
 };
 
 const gapValue = el("gapValue");
-const gapHint = el("gapHint");
-const balanceValue = el("balanceValue");
-
+const statusText = el("statusText");
 const svg = el("spansSvg");
 
 const W = 920;
-const H = 320;
+const H = 280;
 
-const margin = { top: 32, right: 26, bottom: 26, left: 220 };
+const margin = { top: 26, right: 26, bottom: 18, left: 210 };
 const axisW = W - margin.left - margin.right;
 
-const rowH = 62;
-const firstRowY = 70;
-
-function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+const rowH = 58;
+const firstRowY = 52;
 
 function xForValue(v) {
-  // values are 1..10
   const t = (v - 1) / 9;
   return margin.left + t * axisW;
 }
@@ -54,37 +49,6 @@ function readValues() {
   return v;
 }
 
-function setLabels(vals) {
-  for (const s of spans) valueEls[s.key].textContent = String(vals[s.key]);
-
-  const gap = vals.Accountability - vals.Control;
-  gapValue.textContent = gap >= 0 ? `+${gap}` : `${gap}`;
-  gapHint.textContent = "Accountability − Control";
-
-  // Basic heuristic balance indicator:
-  // demand = accountability + influence
-  // supply = control + support
-  const demand = vals.Accountability + vals.Influence;
-  const supply = vals.Control + vals.Support;
-  const delta = supply - demand;
-
-  if (delta >= 2) {
-    balanceValue.textContent = "Supply ≥ Demand";
-    balanceValue.style.color = "var(--ok)";
-  } else if (delta <= -2) {
-    balanceValue.textContent = "Demand > Supply";
-    balanceValue.style.color = "var(--bad)";
-  } else {
-    balanceValue.textContent = "Near balance";
-    balanceValue.style.color = "var(--warn)";
-  }
-
-  // Color hint for gap (classic “entrepreneurial gap”)
-  if (gap >= 3) gapValue.style.color = "var(--warn)";
-  else if (gap <= 0) gapValue.style.color = "var(--ok)";
-  else gapValue.style.color = "var(--text)";
-}
-
 function clearSvg() {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
 }
@@ -97,135 +61,166 @@ function addSvg(tag, attrs = {}, parent = svg) {
 }
 
 function drawBase() {
-  // Background guides
-  addSvg("rect", { x: 0, y: 0, width: W, height: H, fill: "rgba(0,0,0,0)" });
-
-  // Column labels (1..10)
+  // Vertical grid 1..10
   for (let i = 1; i <= 10; i++) {
     const x = xForValue(i);
     addSvg("line", {
       x1: x, y1: margin.top,
       x2: x, y2: H - margin.bottom,
-      stroke: "rgba(255,255,255,.06)",
+      stroke: "rgba(15,23,42,.08)",
       "stroke-width": 1
     });
     addSvg("text", {
-      x, y: 22,
-      fill: "rgba(255,255,255,.55)",
+      x, y: 16,
+      fill: "rgba(15,23,42,.55)",
       "font-size": 12,
       "text-anchor": "middle",
       "font-family": "ui-sans-serif, system-ui",
     }).textContent = i;
   }
 
-  // Rows
+  // Rows + labels
   spans.forEach((s, idx) => {
     const y = yForRow(idx);
 
-    // row separator
     addSvg("line", {
       x1: margin.left, y1: y,
       x2: W - margin.right, y2: y,
-      stroke: "rgba(255,255,255,.10)",
+      stroke: "rgba(15,23,42,.14)",
       "stroke-width": 1
     });
 
-    // left label
     addSvg("text", {
-      x: 16,
+      x: 14,
       y: y + 4,
-      fill: "rgba(231,238,252,.92)",
+      fill: "rgba(15,23,42,.92)",
       "font-size": 13,
       "text-anchor": "start",
       "font-family": "ui-sans-serif, system-ui",
     }).textContent = s.label;
 
-    // subtle sublabel (left)
-    const leftHint = {
-      Control: "Few resources",
-      Accountability: "Few trade-offs",
-      Influence: "Within unit",
-      Support: "No help",
-    }[s.key];
-
-    const rightHint = {
-      Control: "Many resources",
-      Accountability: "Many trade-offs",
-      Influence: "Across units",
-      Support: "Willing to help",
-    }[s.key];
-
     addSvg("text", {
       x: margin.left,
-      y: y + 24,
-      fill: "rgba(147,160,179,.85)",
+      y: y + 22,
+      fill: "rgba(107,114,128,.92)",
       "font-size": 11,
       "text-anchor": "start",
       "font-family": "ui-sans-serif, system-ui",
-    }).textContent = leftHint;
+    }).textContent = s.left;
 
     addSvg("text", {
       x: W - margin.right,
-      y: y + 24,
-      fill: "rgba(147,160,179,.85)",
+      y: y + 22,
+      fill: "rgba(107,114,128,.92)",
       "font-size": 11,
       "text-anchor": "end",
       "font-family": "ui-sans-serif, system-ui",
-    }).textContent = rightHint;
-  });
-
-  // Top axis line
-  addSvg("line", {
-    x1: margin.left, y1: margin.top,
-    x2: W - margin.right, y2: margin.top,
-    stroke: "rgba(255,255,255,.10)",
-    "stroke-width": 1
+    }).textContent = s.right;
   });
 }
 
-function drawData(vals) {
+function drawZigzag(vals) {
   const points = spans.map((s, idx) => {
-    const x = xForValue(vals[s.key]);
-    const y = yForRow(idx);
-    return { x, y };
+    return { x: xForValue(vals[s.key]), y: yForRow(idx) };
   });
 
-  // Zigzag line (thin, crisp)
   const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
   addSvg("path", {
     d,
     fill: "none",
-    stroke: "rgba(231,238,252,.92)",
-    "stroke-width": 1.25,
+    stroke: "rgba(15,23,42,.85)",
+    "stroke-width": 1.2,
     "stroke-linecap": "round",
     "stroke-linejoin": "round"
   });
 
-  // Points
   for (const p of points) {
-    addSvg("circle", {
-      cx: p.x, cy: p.y,
-      r: 5,
-      fill: "rgba(231,238,252,.96)"
-    });
-    addSvg("circle", {
-      cx: p.x, cy: p.y,
-      r: 10,
-      fill: "rgba(231,238,252,.10)"
-    });
+    addSvg("circle", { cx: p.x, cy: p.y, r: 5, fill: "rgba(15,23,42,.92)" });
+    addSvg("circle", { cx: p.x, cy: p.y, r: 10, fill: "rgba(15,23,42,.10)" });
   }
+}
+
+function drawGapArrow(vals) {
+  // Gap = Accountability - Control, show as horizontal arrow between their positions
+  const y = 34; // under the scale numbers
+  const xC = xForValue(vals.Control);
+  const xA = xForValue(vals.Accountability);
+
+  const left = Math.min(xC, xA);
+  const right = Math.max(xC, xA);
+
+  // marker arrowhead
+  const defs = addSvg("defs");
+  const marker = addSvg("marker", {
+    id: "arrowHead",
+    markerWidth: "10",
+    markerHeight: "10",
+    refX: "9",
+    refY: "3",
+    orient: "auto",
+    markerUnits: "strokeWidth"
+  }, defs);
+
+  addSvg("path", { d: "M0,0 L10,3 L0,6 Z", fill: "rgba(15,23,42,.75)" }, marker);
+
+  addSvg("line", {
+    x1: left, y1: y,
+    x2: right, y2: y,
+    stroke: "rgba(15,23,42,.75)",
+    "stroke-width": 2,
+    "marker-end": "url(#arrowHead)"
+  });
+
+  addSvg("text", {
+    x: (left + right) / 2,
+    y: y - 8,
+    fill: "rgba(15,23,42,.75)",
+    "font-size": 12,
+    "text-anchor": "middle",
+    "font-family": "ui-sans-serif, system-ui",
+  }).textContent = "Entrepreneurial Gap";
+}
+
+function setTopUI(vals) {
+  for (const s of spans) valueEls[s.key].textContent = String(vals[s.key]);
+
+  const gap = vals.Accountability - vals.Control;
+  gapValue.textContent = (gap >= 0 ? `+${gap}` : `${gap}`);
+
+  // Simple “balanced” heuristic for the demo (not a real model)
+  const demand = vals.Accountability + vals.Influence;
+  const supply = vals.Control + vals.Support;
+  const delta = supply - demand;
+
+  if (delta >= 2) {
+    statusText.textContent = "This job is balanced.";
+    statusText.style.background = "#ecfeff";
+    statusText.style.color = "#0f766e";
+  } else if (delta <= -2) {
+    statusText.textContent = "This job is overloaded.";
+    statusText.style.background = "#fef2f2";
+    statusText.style.color = "#b91c1c";
+  } else {
+    statusText.textContent = "This job is near balance.";
+    statusText.style.background = "#fffbeb";
+    statusText.style.color = "#b45309";
+  }
+
+  // Gap color cue
+  if (gap >= 3) gapValue.style.color = "var(--warn)";
+  else if (gap <= 0) gapValue.style.color = "var(--ok)";
+  else gapValue.style.color = "var(--text)";
 }
 
 function render() {
   const vals = readValues();
-  setLabels(vals);
+  setTopUI(vals);
+
   clearSvg();
   drawBase();
-  drawData(vals);
+  drawGapArrow(vals);
+  drawZigzag(vals);
 }
 
-for (const s of spans) {
-  inputs[s.key].addEventListener("input", render);
-}
-
+Object.values(inputs).forEach((inp) => inp.addEventListener("input", render));
 render();
