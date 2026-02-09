@@ -3,76 +3,131 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Job Design Spans (Classic Demo)</title>
+  <title>Job Design Spans (Classic)</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <main class="wrap">
-    <section class="card">
-      <header class="top">
-        <div class="title">
-          <h1>Job Design Spans</h1>
-          <p>Classic demo (1–10)</p>
+  <main class="page">
+    <section class="panel" id="panel">
+      <div class="spans" id="spans">
+
+        <!-- Row 1 -->
+        <div class="span-row" data-key="control">
+          <div class="row-title">Span of Control</div>
+
+          <div class="row-grid">
+            <div class="value-box" id="box-control">3</div>
+
+            <div class="track-wrap">
+              <div class="track-labels">
+                <span>Few Resources</span>
+                <span>Many Resources</span>
+              </div>
+
+              <div class="track">
+                <input id="s-control" type="range" min="1" max="10" step="1" value="3" />
+              </div>
+
+              <div class="ticks" aria-hidden="true">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="gap">
-          <div class="gap-label">Entrepreneurial Gap</div>
-          <div class="gap-value" id="gapValue">+0</div>
-          <div class="gap-hint">Accountability − Control</div>
+        <!-- Gap overlay (sits between row 1 and 2 like in screenshot) -->
+        <div class="gap-row" aria-hidden="true">
+          <div class="gap-spacer"></div>
+          <div class="gap-canvas">
+            <svg id="gapSvg" viewBox="0 0 760 70" preserveAspectRatio="none"></svg>
+          </div>
         </div>
-      </header>
 
-      <div class="viz">
-        <svg id="spansSvg" viewBox="0 0 920 280" role="img" aria-label="Job Design Spans chart"></svg>
+        <!-- Row 2 -->
+        <div class="span-row" data-key="accountability">
+          <div class="row-title">Span of Accountability</div>
+
+          <div class="row-grid">
+            <div class="value-box" id="box-accountability">8</div>
+
+            <div class="track-wrap">
+              <div class="track-labels">
+                <span>Measures Allow Few Trade-Offs</span>
+                <span>Measures Allow Many Trade-Offs</span>
+              </div>
+
+              <div class="track">
+                <input id="s-accountability" type="range" min="1" max="10" step="1" value="8" />
+              </div>
+
+              <div class="ticks" aria-hidden="true">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="span-row" data-key="influence">
+          <div class="row-title">Span of Influence</div>
+
+          <div class="row-grid">
+            <div class="value-box" id="box-influence">2</div>
+
+            <div class="track-wrap">
+              <div class="track-labels">
+                <span>Interactions Within Unit</span>
+                <span>Interaction Across Units</span>
+              </div>
+
+              <div class="track">
+                <input id="s-influence" type="range" min="1" max="10" step="1" value="2" />
+              </div>
+
+              <div class="ticks" aria-hidden="true">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="span-row" data-key="support">
+          <div class="row-title">Span of Support</div>
+
+          <div class="row-grid">
+            <div class="value-box" id="box-support">5</div>
+
+            <div class="track-wrap">
+              <div class="track-labels">
+                <span>No Help From Others</span>
+                <span>Others Willing to Help</span>
+              </div>
+
+              <div class="track">
+                <input id="s-support" type="range" min="1" max="10" step="1" value="5" />
+              </div>
+
+              <div class="ticks" aria-hidden="true">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overlay: dotted connector line across the 4 sliders -->
+        <svg id="overlaySvg" class="overlay" aria-hidden="true"></svg>
+
       </div>
 
-      <div class="sliders">
-        <div class="row">
-          <div class="row-head">
-            <div class="row-title">Span of Control</div>
-            <div class="row-val"><span id="vControl">3</span></div>
-          </div>
-          <div class="row-axis">
-            <span>Few</span><span>Many</span>
-          </div>
-          <input id="sControl" type="range" min="1" max="10" step="1" value="3" />
-        </div>
-
-        <div class="row">
-          <div class="row-head">
-            <div class="row-title">Span of Accountability</div>
-            <div class="row-val"><span id="vAccountability">8</span></div>
-          </div>
-          <div class="row-axis">
-            <span>Few trade-offs</span><span>Many trade-offs</span>
-          </div>
-          <input id="sAccountability" type="range" min="1" max="10" step="1" value="8" />
-        </div>
-
-        <div class="row">
-          <div class="row-head">
-            <div class="row-title">Span of Influence</div>
-            <div class="row-val"><span id="vInfluence">2</span></div>
-          </div>
-          <div class="row-axis">
-            <span>Within unit</span><span>Across units</span>
-          </div>
-          <input id="sInfluence" type="range" min="1" max="10" step="1" value="2" />
-        </div>
-
-        <div class="row">
-          <div class="row-head">
-            <div class="row-title">Span of Support</div>
-            <div class="row-val"><span id="vSupport">5</span></div>
-          </div>
-          <div class="row-axis">
-            <span>No help</span><span>Willing to help</span>
-          </div>
-          <input id="sSupport" type="range" min="1" max="10" step="1" value="5" />
-        </div>
+      <div class="status" id="status">
+        <span class="check" aria-hidden="true">✓</span>
+        <span id="statusText">This job is balanced.</span>
       </div>
-
-      <div class="status" id="statusText">This job is balanced.</div>
     </section>
   </main>
 
