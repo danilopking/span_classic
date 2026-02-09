@@ -37,10 +37,6 @@ function svgEl(tag, attrs, parent){
   return el;
 }
 
-/**
- * Point for overlay line: approximate thumb center relative to spans container.
- * Stable enough for demo video. (If you want pixel-perfect, we can build custom sliders.)
- */
 function sliderPoint(key){
   const input = sliders[key];
   const rect = input.getBoundingClientRect();
@@ -57,36 +53,12 @@ function sliderPoint(key){
   return { x, y };
 }
 
-// helper: range value -> x in a container width (used for gap arrow)
 function xFromRange(input, width){
   const min = parseInt(input.min,10);
   const max = parseInt(input.max,10);
   const v = parseInt(input.value,10);
   const t = (v - min) / (max - min);
   return t * width;
-}
-
-function renderOverlayLine(){
-  const host = spansEl.getBoundingClientRect();
-  overlaySvg.setAttribute("viewBox", `0 0 ${host.width} ${host.height}`);
-  overlaySvg.setAttribute("preserveAspectRatio", "none");
-
-  clear(overlaySvg);
-
-  const p1 = sliderPoint("control");
-  const p2 = sliderPoint("accountability");
-  const p3 = sliderPoint("influence");
-  const p4 = sliderPoint("support");
-
-  svgEl("polyline", {
-    points: [p1,p2,p3,p4].map(p => `${p.x},${p.y}`).join(" "),
-    fill: "none",
-    stroke: "rgba(17,24,39,.75)",
-    "stroke-width": 2,
-    "stroke-dasharray": "2 5",
-    "stroke-linecap": "round",
-    "stroke-linejoin": "round",
-  }, overlaySvg);
 }
 
 function renderGapArrow(){
@@ -97,7 +69,6 @@ function renderGapArrow(){
   gapSvg.setAttribute("preserveAspectRatio", "none");
   clear(gapSvg);
 
-  // Robust and straight: use % position on the scale, not DOM px mapping.
   const xC = xFromRange(sliders.control, w);
   const xA = xFromRange(sliders.accountability, w);
 
@@ -112,7 +83,6 @@ function renderGapArrow(){
   const head = 14;
   const half = 7;
 
-  // main line
   svgEl("line", {
     x1: left + head,
     y1: y,
@@ -123,19 +93,16 @@ function renderGapArrow(){
     "stroke-linecap": "round",
   }, gapSvg);
 
-  // left head
   svgEl("path", {
     d: `M ${left + head} ${y - half} L ${left} ${y} L ${left + head} ${y + half} Z`,
     fill
   }, gapSvg);
 
-  // right head
   svgEl("path", {
     d: `M ${right - head} ${y - half} L ${right} ${y} L ${right - head} ${y + half} Z`,
     fill
   }, gapSvg);
 
-  // label
   svgEl("text", {
     x: (left + right) / 2,
     y: y + 26,
@@ -146,30 +113,80 @@ function renderGapArrow(){
   }, gapSvg).textContent = "Entrepreneurial Gap";
 }
 
-function renderStatus(){
-  const demand = val("accountability") + val("influence");
-  const supply = val("control") + val("support");
-  const delta = supply - demand;
+/** Geometry: do two segments intersect? */
+function segmentsIntersect(a,b,c,d){
+  // a-b and c-d
+  function orient(p,q,r){
+    return (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  }
+  function onSeg(p,q,r){
+    return Math.min(p.x,r.x) <= q.x && q.x <= Math.max(p.x,r.x) &&
+           Math.min(p.y,r.y) <= q.y && q.y <= Math.max(p.y,r.y);
+  }
+  const o1 = orient(a,b,c);
+  const o2 = orient(a,b,d);
+  const o3 = orient(c,d,a);
+  const o4 = orient(c,d,b);
 
-  statusEl.classList.remove("ok","warn","bad");
+  if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) &&
+      (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0)) return true;
 
-  if (delta >= -1 && delta <= 1) {
-    statusText.textContent = "This job is balanced.";
+  // collinear cases (rare here, but ok)
+  if (o1 === 0 && onSeg(a,c,b)) return true;
+  if (o2 === 0 && onSeg(a,d,b)) return true;
+  if (o3 === 0 && onSeg(c,a,d)) return true;
+  if (o4 === 0 && onSeg(c,b,d)) return true;
+
+  return false;
+}
+
+function renderXTest(){
+  const host = spansEl.getBoundingClientRect();
+  overlaySvg.setAttribute("viewBox", `0 0 ${host.width} ${host.height}`);
+  overlaySvg.setAttribute("preserveAspectRatio", "none");
+  clear(overlaySvg);
+
+  const pControl = sliderPoint("control");
+  const pAcc = sliderPoint("accountability");
+  const pInfluence = sliderPoint("influence");
+  const pSupport = sliderPoint("support");
+
+  // JDOT-style “X”: (Control ↔ Influence) and (Accountability ↔ Support)
+  svgEl("line", {
+    x1: pControl.x, y1: pControl.y,
+    x2: pInfluence.x, y2: pInfluence.y,
+    stroke: "rgba(17,24,39,.78)",
+    "stroke-width": 2.2,
+    "stroke-dasharray": "2 5",
+    "stroke-linecap": "round",
+  }, overlaySvg);
+
+  svgEl("line", {
+    x1: pAcc.x, y1: pAcc.y,
+    x2: pSupport.x, y2: pSupport.y,
+    stroke: "rgba(17,24,39,.78)",
+    "stroke-width": 2.2,
+    "stroke-dasharray": "2 5",
+    "stroke-linecap": "round",
+  }, overlaySvg);
+
+  // Balanced if the two segments intersect (form an X)
+  const balanced = segmentsIntersect(pControl, pInfluence, pAcc, pSupport);
+
+  statusEl.classList.remove("ok","bad");
+  if (balanced){
     statusEl.classList.add("ok");
-  } else if (delta < -1) {
-    statusText.textContent = "This job is overloaded.";
-    statusEl.classList.add("bad");
+    statusText.textContent = "This job is balanced.";
   } else {
-    statusText.textContent = "This job has excess capacity.";
-    statusEl.classList.add("warn");
+    statusEl.classList.add("bad");
+    statusText.textContent = "This job is imbalanced.";
   }
 }
 
 function render(){
   setBoxes();
-  renderStatus();
-  renderOverlayLine();
   renderGapArrow();
+  renderXTest();
 }
 
 Object.values(sliders).forEach(inp => inp.addEventListener("input", render));
