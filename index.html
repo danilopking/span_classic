@@ -3,108 +3,76 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Job Design Spans (Classic)</title>
+  <title>Job Design Spans (Classic Demo)</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <main class="wrap">
-    <header class="header">
-      <h1>Job Design Spans</h1>
-      <p class="sub">Classic 4-spans view (Harvard-style), minimalist and honest.</p>
-    </header>
-
     <section class="card">
-      <div class="chart-header">
-        <div class="legend">
-          <span class="dot"></span>
-          <span>Current configuration</span>
+      <header class="top">
+        <div class="title">
+          <h1>Job Design Spans</h1>
+          <p>Classic demo (1–10)</p>
         </div>
 
-        <div class="metrics">
-          <div class="metric">
-            <div class="metric-label">Entrepreneurial Gap</div>
-            <div class="metric-value" id="gapValue">0</div>
-            <div class="metric-hint" id="gapHint">Accountability − Control</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Balance check</div>
-            <div class="metric-value" id="balanceValue">—</div>
-            <div class="metric-hint">Heuristic: demand vs supply</div>
-          </div>
+        <div class="gap">
+          <div class="gap-label">Entrepreneurial Gap</div>
+          <div class="gap-value" id="gapValue">+0</div>
+          <div class="gap-hint">Accountability − Control</div>
         </div>
+      </header>
+
+      <div class="viz">
+        <svg id="spansSvg" viewBox="0 0 920 280" role="img" aria-label="Job Design Spans chart"></svg>
       </div>
 
-      <div class="svg-wrap" aria-label="Job Design Spans chart">
-        <svg id="spansSvg" viewBox="0 0 920 320" role="img">
-          <!-- axes & guides injected by JS -->
-        </svg>
-      </div>
-
-      <hr class="sep"/>
-
-      <section class="controls" aria-label="Controls">
-        <div class="control">
-          <div class="control-head">
-            <div>
-              <div class="label">Span of Control</div>
-              <div class="desc">Decision rights over resources: people, budget, assets.</div>
-            </div>
-            <div class="pill"><span id="vControl">3</span>/10</div>
+      <div class="sliders">
+        <div class="row">
+          <div class="row-head">
+            <div class="row-title">Span of Control</div>
+            <div class="row-val"><span id="vControl">3</span></div>
+          </div>
+          <div class="row-axis">
+            <span>Few</span><span>Many</span>
           </div>
           <input id="sControl" type="range" min="1" max="10" step="1" value="3" />
-          <div class="ends">
-            <span>Few resources</span><span>Many resources</span>
-          </div>
         </div>
 
-        <div class="control">
-          <div class="control-head">
-            <div>
-              <div class="label">Span of Accountability</div>
-              <div class="desc">Breadth of trade-offs embedded in performance measures.</div>
-            </div>
-            <div class="pill"><span id="vAccountability">8</span>/10</div>
+        <div class="row">
+          <div class="row-head">
+            <div class="row-title">Span of Accountability</div>
+            <div class="row-val"><span id="vAccountability">8</span></div>
           </div>
-          <input id="sAccountability" type="range" min="1" max="10" step="1" value="8" />
-          <div class="ends">
+          <div class="row-axis">
             <span>Few trade-offs</span><span>Many trade-offs</span>
           </div>
+          <input id="sAccountability" type="range" min="1" max="10" step="1" value="8" />
         </div>
 
-        <div class="control">
-          <div class="control-head">
-            <div>
-              <div class="label">Span of Influence</div>
-              <div class="desc">Time/attention needed to influence others to succeed.</div>
-            </div>
-            <div class="pill"><span id="vInfluence">2</span>/10</div>
+        <div class="row">
+          <div class="row-head">
+            <div class="row-title">Span of Influence</div>
+            <div class="row-val"><span id="vInfluence">2</span></div>
           </div>
-          <input id="sInfluence" type="range" min="1" max="10" step="1" value="2" />
-          <div class="ends">
+          <div class="row-axis">
             <span>Within unit</span><span>Across units</span>
           </div>
+          <input id="sInfluence" type="range" min="1" max="10" step="1" value="2" />
         </div>
 
-        <div class="control">
-          <div class="control-head">
-            <div>
-              <div class="label">Span of Support</div>
-              <div class="desc">Expected support from other units and people.</div>
-            </div>
-            <div class="pill"><span id="vSupport">5</span>/10</div>
+        <div class="row">
+          <div class="row-head">
+            <div class="row-title">Span of Support</div>
+            <div class="row-val"><span id="vSupport">5</span></div>
           </div>
-          <input id="sSupport" type="range" min="1" max="10" step="1" value="5" />
-          <div class="ends">
+          <div class="row-axis">
             <span>No help</span><span>Willing to help</span>
           </div>
+          <input id="sSupport" type="range" min="1" max="10" step="1" value="5" />
         </div>
-      </section>
+      </div>
 
-      <footer class="footer">
-        <p class="footnote">
-          Note: This is a simplified visualization (1–10). Don’t worship the numbers. Use them to spot design mismatches.
-        </p>
-      </footer>
+      <div class="status" id="statusText">This job is balanced.</div>
     </section>
   </main>
 
