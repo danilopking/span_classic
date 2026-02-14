@@ -103,6 +103,11 @@ function renderGapArrow(){
     fill
   }, gapSvg);
 
+  // ✅ Only change: label depends on which span is wider
+  const label = (val("control") > val("accountability"))
+    ? "Stagnation Gap"
+    : "Entrepreneurial Gap";
+
   svgEl("text", {
     x: (left + right) / 2,
     y: y + 26,
@@ -110,7 +115,7 @@ function renderGapArrow(){
     "font-size": 18,
     "text-anchor": "middle",
     "font-family": "ui-sans-serif, system-ui"
-  }, gapSvg).textContent = "Entrepreneurial Gap";
+  }, gapSvg).textContent = label;
 }
 
 /** Geometry: do two segments intersect? */
