@@ -69,6 +69,13 @@ function renderGapArrow(){
   gapSvg.setAttribute("preserveAspectRatio", "none");
   clear(gapSvg);
 
+  // ✅ Show ONLY Entrepreneurial Gap, and only when it exists:
+  // Entrepreneurial gap exists when Control < Accountability.
+  if (val("control") >= val("accountability")) {
+    // Nothing to show in the gap area.
+    return;
+  }
+
   const xC = xFromRange(sliders.control, w);
   const xA = xFromRange(sliders.accountability, w);
 
@@ -103,11 +110,6 @@ function renderGapArrow(){
     fill
   }, gapSvg);
 
-  // ✅ Only change: label depends on which span is wider
-  const label = (val("control") > val("accountability"))
-    ? "Stagnation Gap"
-    : "Entrepreneurial Gap";
-
   svgEl("text", {
     x: (left + right) / 2,
     y: y + 26,
@@ -115,7 +117,7 @@ function renderGapArrow(){
     "font-size": 18,
     "text-anchor": "middle",
     "font-family": "ui-sans-serif, system-ui"
-  }, gapSvg).textContent = label;
+  }, gapSvg).textContent = "Entrepreneurial Gap";
 }
 
 /** Geometry: do two segments intersect? */
